@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl=2
+
 /**
     A Nextflow-based reproducible pipeline for untargeted metabolomics data analysis
     Description  : RUMP: A Nextflow-based reproducible pipeline for untargeted metabolomics data processing
@@ -25,23 +27,8 @@
     - https://github.com/Nextflow4Metabolomics/nextflow4ms-dial
 */
 
-// Those variable names which are all uppercase are channel names
-
 version='1.0dev'
 timestamp='20221009'
-
-DATA_DIR = Channel.fromPath(params.input_dir, type: 'dir') // Location of folder storing positive data
-
-// Config files
-MSDIAL_CONFIG = Channel.fromPath(params.msdial_config)
-MSFLO_CONFIG = Channel.fromPath(params.msflo_config)
-
-// Library
-MS1_LIBRARY = Channel.fromPath(params.ms1_library)
-MS2_LIBRARY = Channel.fromPath(params.ms2_library)
-
-// Reference files
-REF = Channel.fromPath(params.ref)
 
 /**
     Basic running information
@@ -68,7 +55,7 @@ if (params.help) {
     System.out.println("https://github.com/Nextflow4Metabolomics/nextflow4ms-dial/wiki")
     System.out.println("")
     System.out.println("Usage:  ")
-    System.out.println("   nextflow main.nf -profile [options: functional_test; docker; singularity]")
+    System.out.println("   nextflow run main.nf -profile [options: functional_test; docker; singularity]")
     System.out.println("")
     System.out.println("Arguments (it is mandatory to change `input_file` and `mzmine_dir` before running:")
     System.out.println("----------------------------- common parameters ----------------------------------")
@@ -124,21 +111,21 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 */
 process peak_detection_msdial {
 
-    echo true
+    debug true
 
     publishDir './results/'
 
     input:
-    file msdial_config from MSDIAL_CONFIG // Config file for MS-DIAL to process negative data.
-    file data from DATA_DIR // Location of data files
-    file ms1_lib from MS1_LIBRARY // Location of MS1 library file for negative samples
-    file ms2_lib from MS2_LIBRARY // Location of MS2 library file for negative samples
-    file ref from REF
+    path msdial_config // Config file for MS-DIAL to process negative data.
+    path data // Location of data files
+    path ms1_lib // Location of MS1 library file for negative samples
+    path ms2_lib // Location of MS2 library file for negative samples
+    path ref
 
 
     output:
-    file "ms-dial/AlignResult*.msdial" into MSDIAL_RESULT // MS-DIAL processing result for the data.
-    stdout msdial_result
+    path "ms-dial/AlignResult*.msdial", emit: msdial_result // MS-DIAL processing result for the data.
+    stdout emit: msdial_result_log
 
     shell:
     """
@@ -157,7 +144,7 @@ process msflo_download{
     publishDir './'
 
     output:
-    file "ms-flo" into MSFLO_SOFTWARE
+    path "ms-flo", emit: msflo_software
 
     shell:
     """
@@ -173,18 +160,18 @@ process msflo_download{
 */
 process msflo_processing{
     
-    echo true
+    debug true
 
     publishDir './results/'
     
     input:
-    file msflo from MSFLO_SOFTWARE // Load MS-FLO software from the channel.
-    file msflo_config from MSFLO_CONFIG // Config file for MS-FLO to process negative data.
-    file msdial_result from MSDIAL_RESULT // Fetch aligned result from MS-DIAL
+    path msflo // Load MS-FLO software from the channel.
+    path msflo_config // Config file for MS-FLO to process negative data.
+    path msdial_result // Fetch aligned result from MS-DIAL
 
     output:
-    file "ms-flo/AlignResult*_processed.msdial" into MSFLO_RESULT
-    stdout msflo_result
+    path "ms-flo/AlignResult*_processed.msdial", emit: msflo_result
+    stdout emit: msflo_result_log
 
     shell:
     """
@@ -193,4 +180,22 @@ process msflo_processing{
     python3 run_msflo.py -f msdial ${msflo_config} ${msdial_result}
     """
 
+}
+
+workflow {
+    peak_detection_msdial(
+        Channel.fromPath(params.msdial_config),
+        Channel.fromPath(params.input_dir, type: 'dir'),
+        Channel.fromPath(params.ms1_library),
+        Channel.fromPath(params.ms2_library),
+        Channel.fromPath(params.ref)
+    )
+
+    msflo_download()
+
+    msflo_processing(
+        msflo_download.out.msflo_software,
+        Channel.fromPath(params.msflo_config),
+        peak_detection_msdial.out.msdial_result
+    )
 }
