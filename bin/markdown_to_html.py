@@ -11,7 +11,14 @@ def convert_markdown(in_fn):
     input_md = io.open(in_fn, mode="r", encoding="utf-8").read()
     html = markdown.markdown(
         "[TOC]\n" + input_md,
-        extensions=["pymdownx.extra", "pymdownx.b64", "pymdownx.highlight", "pymdownx.emoji", "pymdownx.tilde", "toc"],
+        extensions=[
+            "pymdownx.extra",
+            "pymdownx.b64",
+            "pymdownx.highlight",
+            "pymdownx.emoji",
+            "pymdownx.tilde",
+            "toc",
+        ],
         extension_configs={
             "pymdownx.b64": {"base_path": os.path.dirname(in_fn)},
             "pymdownx.highlight": {"noclasses": True},
@@ -24,10 +31,18 @@ def convert_markdown(in_fn):
 def wrap_html(contents):
     header = """<!DOCTYPE html><html>
     <head>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link
+          rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous"
+        >
         <style>
             body {
-              font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+                "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+                "Noto Color Emoji";
               padding: 3em;
               margin-right: 350px;
               max-width: 100%;

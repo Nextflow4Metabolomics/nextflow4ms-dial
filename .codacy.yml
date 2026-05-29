@@ -1,0 +1,7 @@
+---
+exclude_paths:
+  - "actions-runner/**"
+  - "data/**"
+  - "functional_test/sample_results/**"
+  - "logs/**"
+  - "results/**"
