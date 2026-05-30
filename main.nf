@@ -27,10 +27,7 @@ nextflow.enable.dsl=2
     - https://github.com/Nextflow4Metabolomics/nextflow4ms-dial
 */
 
-def version = '1.0dev'
-def timestamp = '20221009'
-
-/** 
+/**
     Process description: Process for running MS-DIAL with negative mode batchfile and data to generate peak table of negative mode.
     Inputs: MS-DIAL config file; raw .mzML data; MS1 library; MS2 library; reference file.
     Outputs: The peak table produced by MS-DIAL after processing all raw data.
@@ -109,6 +106,9 @@ process msflo_processing{
 }
 
 workflow {
+    def version = '1.0dev'
+    def timestamp = '20221009'
+
     // Basic running information
     println "Project : $workflow.projectDir"
     println "Git info: $workflow.repository - $workflow.revision [$workflow.commitId]"
